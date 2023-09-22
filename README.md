@@ -7,7 +7,6 @@ Delly is a command-line utility designed to help you efficiently clean up your f
 - [Installation](#installation)
 - [Usage](#usage)
 - [Example](#example)
-- [Contributing](#contributing)
 - [License](#license)
 
 ## Installation
