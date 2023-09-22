@@ -36,10 +36,10 @@ Delly will then provide a list of matching files along with their sizes and ask 
 
 ## Example
 
-Let's walk through a typical usage scenario. Suppose you want to delete all `.mp4` and `.zip` files from your `~/Downloads` directory:
+Let's walk through a typical usage scenario. Suppose you want to delete all `.mp4`, `ttf` and `.zip` files from your `~/Downloads` directory:
 
 ```shell
-delly -e mp4,zip ~/Downloads
+delly -e mp4,zip,ttf ~/Downloads
 ```
 
 Delly will display a list of matching files, their sizes, and ask for your confirmation before proceeding with the deletion. After successfully deleting the files, it will report the bytes saved per directory.
