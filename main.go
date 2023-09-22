@@ -103,6 +103,8 @@ func (d dirMap) report() error {
 	if err := w.Flush(); err != nil {
 		log.Fatal(err)
 	}
+
+	fmt.Print("\n")
 	return nil
 }
 
@@ -149,7 +151,7 @@ func (f fileMap) report(total int64) error {
 	}
 
 	fmt.Fprint(w, "----\t----\n")
-	fmt.Fprintf(w, "TOTAL\t%s\n", humanize.Bytes(uint64(total)))
+	fmt.Fprintf(w, "TOTAL\t%s\n\n", humanize.Bytes(uint64(total)))
 
 	if err := w.Flush(); err != nil {
 		log.Fatal(err)
@@ -169,7 +171,6 @@ func deleteFilesByExtension(dir string, ext []string, dmap dirMap) error {
 				dir := filepath.Dir(path)
 				sz, ok := dmap[dir]
 				if ok {
-					fmt.Printf("deleting %s\n", path)
 					err := os.Remove(path)
 					if err != nil {
 						return err
@@ -252,6 +253,8 @@ func askForConfirmation(s string) bool {
 		}
 
 		response = strings.ToLower(strings.TrimSpace(response))
+
+		fmt.Print("\n")
 
 		if response == "y" || response == "yes" {
 			return true
