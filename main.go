@@ -27,8 +27,11 @@ type dirMeta struct {
 
 func main() {
 	app := &cli.App{
+		Usage:           "Delete files within a directory structure by file extensions",
+		UsageText:       "delly [global options] command [arguments...]",
+		HideHelpCommand: true,
 		Flags: []cli.Flag{
-			&cli.StringFlag{
+			&cli.StringSliceFlag{
 				Name:     "ext",
 				Aliases:  []string{"e"},
 				Required: true,
@@ -42,10 +45,8 @@ func main() {
 			return nil
 		},
 		Action: func(ctx *cli.Context) error {
-			ext := ctx.String("ext")
+			exts := ctx.StringSlice("ext")
 			rootDir := ctx.Args().Get(0)
-
-			exts := parseExts(ext)
 
 			elems, err := dryrun(rootDir, exts)
 			if err != nil {
