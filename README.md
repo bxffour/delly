@@ -49,13 +49,13 @@ Output:
 ```shell
 FILE                                                                                  SIZE
 ----                                                                                  ----
-scratch/Downloads/go1.21.1.linux-amd64.tar.gz                                         67 MB
-scratch/Downloads/Cantarell.zip                                                       185 kB
-scratch/Downloads/Inter.zip                                                           3.6 MB
-scratch/Downloads/JetBrainsMono-2.304/fonts/variable/JetBrainsMono-Italic[wght].ttf   309 kB
-scratch/Downloads/JetBrainsMono-2.304/fonts/variable/JetBrainsMono[wght].ttf          303 kB
-scratch/Downloads/JetBrainsMono-2.304.zip                                             5.6 MB
-scratch/Downloads/bundleservice.zip                                                   12 MB
+/home/user/Downloads/go1.21.1.linux-amd64.tar.gz                                         67 MB
+/home/user/Downloads/Cantarell.zip                                                       185 kB
+/home/user/Downloads/Inter.zip                                                           3.6 MB
+/home/user/Downloads/JetBrainsMono-2.304/fonts/variable/JetBrainsMono-Italic[wght].ttf   309 kB
+/home/user/Downloads/JetBrainsMono-2.304/fonts/variable/JetBrainsMono[wght].ttf          303 kB
+/home/user/Downloads/JetBrainsMono-2.304.zip                                             5.6 MB
+/home/user/Downloads/bundleservice.zip                                                   12 MB
 ----                                                                                  ----
 TOTAL                                                                                 89 MB
 
@@ -63,8 +63,8 @@ do you want to go ahead with deleting these files? [y/n]: y
 
 DIRECTORY                                              OLDSIZE     NEWSIZE     BYTES SAVED
 ---------                                              -------     -------     -----------
-scratch/Downloads                                      332 MB      244 MB      88 MB
-scratch/Downloads/JetBrainsMono-2.304/fonts/variable   612 kB      0 B         612 kB
+/home/user/Downloads                                      332 MB      244 MB      88 MB
+/home/user/Downloads/JetBrainsMono-2.304/fonts/variable   612 kB      0 B         612 kB
 ```
 
 ## Contributing
