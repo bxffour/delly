@@ -53,7 +53,7 @@ func main() {
 				return err
 			}
 
-			if elems == 0 {
+			if len(elems) == 0 {
 				fmt.Println("There is nothing to delete. Exiting...")
 				return nil
 			}
@@ -65,7 +65,7 @@ func main() {
 				return nil
 			}
 
-			if err := deleteFiles(rootDir, exts); err != nil {
+			if err := deleteFiles(rootDir, elems); err != nil {
 				return err
 			}
 
@@ -108,30 +108,30 @@ func (d dirMap) report() error {
 	return nil
 }
 
-func dryrun(rootDir string, exts []string) (int, error) {
+func dryrun(rootDir string, exts []string) (fileMap, error) {
 	fmap, sz, err := collectFileSizes(rootDir, exts)
 	if err != nil {
-		return 0, err
+		return fileMap{}, err
 	}
 
 	if len(fmap) == 0 {
-		return 0, nil
+		return fileMap{}, nil
 	}
 
 	if err := fmap.report(sz); err != nil {
-		return 0, err
+		return fileMap{}, err
 	}
 
-	return len(fmap), nil
+	return fmap, nil
 }
 
-func deleteFiles(rootDir string, exts []string) error {
+func deleteFiles(rootDir string, fmap fileMap) error {
 	dmap, err := collectDirSizes(rootDir)
 	if err != nil {
 		return err
 	}
 
-	if err := deleteFilesByExtension(rootDir, exts, dmap); err != nil {
+	if err := deleteFilesByExtension(rootDir, fmap, dmap); err != nil {
 		return err
 	}
 
@@ -160,26 +160,25 @@ func (f fileMap) report(total int64) error {
 	return nil
 }
 
-func deleteFilesByExtension(dir string, ext []string, dmap dirMap) error {
+func deleteFilesByExtension(dir string, fmap fileMap, dmap dirMap) error {
 	filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			log.Println(err)
 		}
 
-		if !info.IsDir() {
-			if matchExt(info.Name(), ext) {
-				dir := filepath.Dir(path)
-				sz, ok := dmap[dir]
-				if ok {
-					err := os.Remove(path)
-					if err != nil {
-						return err
-					}
-					sz.bytesDeleted += info.Size()
-					dmap[dir] = sz
+		for path, size := range fmap {
+			dir := filepath.Dir(path)
+			sz, ok := dmap[dir]
+			if ok {
+				err := os.Remove(path)
+				if err != nil {
+					return err
 				}
+				sz.bytesDeleted += size
+				dmap[dir] = sz
 			}
 		}
+
 		return nil
 	})
 
