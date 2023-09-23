@@ -161,26 +161,18 @@ func (f fileMap) report(total int64) error {
 }
 
 func deleteFilesByExtension(dir string, fmap fileMap, dmap dirMap) error {
-	filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
-		if err != nil {
-			log.Println(err)
-		}
-
-		for path, size := range fmap {
-			dir := filepath.Dir(path)
-			sz, ok := dmap[dir]
-			if ok {
-				err := os.Remove(path)
-				if err != nil {
-					return err
-				}
-				sz.bytesDeleted += size
-				dmap[dir] = sz
+	for path, size := range fmap {
+		dir := filepath.Dir(path)
+		sz, ok := dmap[dir]
+		if ok {
+			err := os.Remove(path)
+			if err != nil {
+				return err
 			}
+			sz.bytesDeleted += size
+			dmap[dir] = sz
 		}
-
-		return nil
-	})
+	}
 
 	return nil
 }
