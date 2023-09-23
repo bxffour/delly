@@ -186,7 +186,7 @@ func collectDirMetadata(rootdir string, exts []string) (metadata, error) {
 
 			dir := filepath.Dir(path)
 			sz, ok := dmap[dir]
-			if !ok {
+			if ok {
 				sz.size += info.Size()
 				dmap[dir] = sz
 			}
