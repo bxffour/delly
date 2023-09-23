@@ -15,6 +15,12 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+type metadata struct {
+	dMeta dirMap
+	fMeta fileMap
+	total int64
+}
+
 type (
 	dirMap  map[string]dirMeta
 	fileMap map[string]int64
@@ -48,14 +54,18 @@ func main() {
 			exts := ctx.StringSlice("ext")
 			rootDir := ctx.Args().Get(0)
 
-			elems, err := dryrun(rootDir, exts)
+			meta, err := collectDirMetadata(rootDir, exts)
 			if err != nil {
 				return err
 			}
 
-			if len(elems) == 0 {
+			if meta.total == 0 {
 				fmt.Println("There is nothing to delete. Exiting...")
 				return nil
+			}
+
+			if err := meta.reportFileMetadata(); err != nil {
+				return err
 			}
 
 			confirm := askForConfirmation("do you want to go ahead with deleting these files?")
@@ -65,7 +75,12 @@ func main() {
 				return nil
 			}
 
-			if err := deleteFiles(rootDir, elems); err != nil {
+			meta, err = deleteFilesByExtension(rootDir, meta)
+			if err != nil {
+				return err
+			}
+
+			if err := meta.reportDirMetadata(); err != nil {
 				return err
 			}
 
@@ -76,10 +91,6 @@ func main() {
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}
-}
-
-func parseExts(exts string) []string {
-	return strings.Split(exts, ",")
 }
 
 func (d dirMap) report() error {
@@ -108,38 +119,16 @@ func (d dirMap) report() error {
 	return nil
 }
 
-func dryrun(rootDir string, exts []string) (fileMap, error) {
-	fmap, sz, err := collectFileSizes(rootDir, exts)
-	if err != nil {
-		return fileMap{}, err
+func (m metadata) reportFileMetadata() error {
+	if m.total == 0 {
+		return nil
 	}
 
-	if len(fmap) == 0 {
-		return fileMap{}, nil
-	}
-
-	if err := fmap.report(sz); err != nil {
-		return fileMap{}, err
-	}
-
-	return fmap, nil
+	return m.fMeta.report(m.total)
 }
 
-func deleteFiles(rootDir string, fmap fileMap) error {
-	dmap, err := collectDirSizes(rootDir)
-	if err != nil {
-		return err
-	}
-
-	if err := deleteFilesByExtension(rootDir, fmap, dmap); err != nil {
-		return err
-	}
-
-	if err := dmap.report(); err != nil {
-		return err
-	}
-
-	return nil
+func (m metadata) reportDirMetadata() error {
+	return m.dMeta.report()
 }
 
 func (f fileMap) report(total int64) error {
@@ -160,67 +149,60 @@ func (f fileMap) report(total int64) error {
 	return nil
 }
 
-func deleteFilesByExtension(dir string, fmap fileMap, dmap dirMap) error {
-	for path, size := range fmap {
+func deleteFilesByExtension(dir string, meta metadata) (metadata, error) {
+	for path, size := range meta.fMeta {
 		dir := filepath.Dir(path)
-		sz, ok := dmap[dir]
+		sz, ok := meta.dMeta[dir]
 		if ok {
 			err := os.Remove(path)
 			if err != nil {
-				return err
+				return metadata{}, err
 			}
 			sz.bytesDeleted += size
-			dmap[dir] = sz
+			meta.dMeta[dir] = sz
 		}
 	}
 
-	return nil
+	return meta, nil
 }
 
-func collectDirSizes(rootDir string) (dirMap, error) {
-	dirSz := make(dirMap)
-
-	err := filepath.Walk(rootDir, func(path string, info fs.FileInfo, err error) error {
-		if info.IsDir() {
-			var d dirMeta
-			dirSz[path] = d
-			return nil
-		}
-
-		dir := filepath.Dir(path)
-		sz, ok := dirSz[dir]
-		if ok {
-			sz.size += info.Size()
-			dirSz[dir] = sz
-		}
-
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return dirSz, nil
-}
-
-func collectFileSizes(rootDir string, exts []string) (fileMap, int64, error) {
-	fMeta := make(fileMap)
+func collectDirMetadata(rootdir string, exts []string) (metadata, error) {
+	dmap := make(dirMap)
+	fmap := make(fileMap)
 	var total int64
 
-	err := filepath.Walk(rootDir, func(path string, info fs.FileInfo, err error) error {
-		if !info.IsDir() && matchExt(info.Name(), exts) {
-			size := info.Size()
-			fMeta[path] = size
-			total += size
+	err := filepath.Walk(rootdir, func(path string, info fs.FileInfo, err error) error {
+		if info.IsDir() {
+			var d dirMeta
+			dmap[path] = d
+		}
+
+		if !info.IsDir() {
+			if matchExt(info.Name(), exts) {
+				size := info.Size()
+				fmap[path] = size
+				total += size
+			}
+
+			dir := filepath.Dir(path)
+			sz, ok := dmap[dir]
+			if !ok {
+				sz.size += info.Size()
+				dmap[dir] = sz
+			}
 		}
 
 		return nil
 	})
 	if err != nil {
-		return nil, 0, err
+		return metadata{}, err
 	}
 
-	return fMeta, total, nil
+	return metadata{
+		dMeta: dmap,
+		fMeta: fmap,
+		total: total,
+	}, nil
 }
 
 func matchExt(file string, ext []string) bool {
@@ -247,9 +229,10 @@ func askForConfirmation(s string) bool {
 
 		fmt.Print("\n")
 
-		if response == "y" || response == "yes" {
+		switch response {
+		case "y", "yes":
 			return true
-		} else if response == "n" || response == "no" {
+		case "n", "no":
 			return false
 		}
 	}
