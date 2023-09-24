@@ -75,7 +75,7 @@ func main() {
 				return nil
 			}
 
-			meta, err = deleteFilesByExtension(rootDir, meta)
+			meta, err = deleteFilesByExtension(meta)
 			if err != nil {
 				return err
 			}
@@ -149,7 +149,7 @@ func (f fileMap) report(total int64) error {
 	return nil
 }
 
-func deleteFilesByExtension(dir string, meta metadata) (metadata, error) {
+func deleteFilesByExtension(meta metadata) (metadata, error) {
 	for path, size := range meta.fMeta {
 		dir := filepath.Dir(path)
 		sz, ok := meta.dMeta[dir]
